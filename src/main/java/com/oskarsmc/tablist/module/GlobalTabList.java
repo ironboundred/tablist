@@ -10,14 +10,17 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class GlobalTabList {
     private final ProxyServer proxyServer;
+    private final TabList plugin;
 
     public GlobalTabList(TabList plugin, ProxyServer proxyServer) {
+        this.plugin = plugin;
         this.proxyServer = proxyServer;
         proxyServer.getScheduler().buildTask(plugin, new Runnable() {
             @Override
@@ -71,6 +74,17 @@ public class GlobalTabList {
             return Component.text(username);
         }
         String server = "[" + player.getCurrentServer().get().getServerInfo().getName() + "]";
+        if (plugin.luckperms.getUserManager().getUser(player.getUniqueId()) != null &&
+                !plugin.luckperms.getUserManager().getUser(player.getUniqueId()).getPrimaryGroup().toLowerCase().equals("cyberdog")){
+            String rank = "[" + plugin.luckperms.getUserManager().getUser(player.getUniqueId()).getPrimaryGroup() + "]";
+            return Component.text(server)
+                    .color(TextColor.color(30, 127, 155))
+                    .append(Component.text(rank))
+                        .color(TextColor.color(155, 130, 41))
+                    .append(Component.text(username))
+                        .color(TextColor.color(188, 188, 188));
+        }
+
         return Component.text(server)
                 .color(TextColor.color(30, 127, 155))
                 .append(Component.text(username)).color(TextColor.color(188, 188, 188));
