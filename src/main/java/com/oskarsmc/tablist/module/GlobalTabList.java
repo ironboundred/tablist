@@ -27,7 +27,7 @@ public class GlobalTabList {
             public void run() {
                 update();
             }
-        }).repeat(1, TimeUnit.SECONDS);
+        }).repeat(500, TimeUnit.MILLISECONDS);
     }
 
     @Subscribe
@@ -70,7 +70,7 @@ public class GlobalTabList {
 
     public Component getPlayerEntry(Player player){
         String username = player.getUsername();
-        if (!player.getCurrentServer().isPresent()){
+        if (player.getCurrentServer().isEmpty()){
             return Component.text(username);
         }
         String server = "[" + player.getCurrentServer().get().getServerInfo().getName() + "]";
@@ -79,14 +79,15 @@ public class GlobalTabList {
             String rank = "[" + plugin.luckperms.getUserManager().getUser(player.getUniqueId()).getPrimaryGroup() + "]";
             return Component.text(server)
                     .color(TextColor.color(30, 127, 155))
-                    .append(Component.text(rank))
-                        .color(TextColor.color(155, 130, 41))
-                    .append(Component.text(username))
-                        .color(TextColor.color(188, 188, 188));
+                    .append(Component.text(rank)
+                            .color(TextColor.color(155, 130, 41)))
+                    .append(Component.text(username)
+                            .color(TextColor.color(188, 188, 188)));
         }
 
         return Component.text(server)
                 .color(TextColor.color(30, 127, 155))
-                .append(Component.text(username)).color(TextColor.color(188, 188, 188));
+                .append(Component.text(username)
+                        .color(TextColor.color(188, 188, 188)));
     }
 }
