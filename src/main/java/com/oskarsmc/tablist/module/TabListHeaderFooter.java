@@ -6,7 +6,6 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,8 +15,9 @@ public class TabListHeaderFooter {
     private ProxyServer proxyServer;
 
     public TabListHeaderFooter(TabList plugin, ProxyServer proxyServer, TabSettings tabSettings) {
-        this.header = MiniMessage.get().parse(tabSettings.getToml().getString("tablist-header-footer.header"));
-        this.footer = MiniMessage.get().parse(tabSettings.getToml().getString("tablist-header-footer.footer"));
+        var mm = MiniMessage.miniMessage();
+        this.header = mm.deserialize(tabSettings.getToml().getString("tablist-header-footer.header"));
+        this.footer = mm.deserialize(tabSettings.getToml().getString("tablist-header-footer.footer"));
 
         this.proxyServer = proxyServer;
 
@@ -26,7 +26,7 @@ public class TabListHeaderFooter {
 
     public void update() {
         for (Player player : this.proxyServer.getAllPlayers()) {
-            player.getTabList().setHeaderAndFooter(header, footer);
+            player.sendPlayerListHeaderAndFooter(header, footer);
         }
     }
 }
