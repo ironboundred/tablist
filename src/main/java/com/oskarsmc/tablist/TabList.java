@@ -27,7 +27,7 @@ import java.nio.file.Path;
 public class TabList {
 
     @Inject
-    private Logger logger;
+    public Logger logger;
 
     @Inject
     private ProxyServer proxyServer;
@@ -47,6 +47,12 @@ public class TabList {
     public void onProxyInitialization(ProxyInitializeEvent event) {
         this.tabSettings = new TabSettings(dataDirectory.toFile(), logger);
 
+        try{
+            luckperms = LuckPermsProvider.get();
+        }catch(IllegalArgumentException e){
+            logger.info("Unable  to load LuckPerms!");
+        }
+
         if (this.tabSettings.isEnabled()) {
             if (this.tabSettings.getToml().getBoolean("global-tablist.enabled")) {
                 this.globalTabList = new GlobalTabList(this, this.proxyServer);
@@ -59,12 +65,6 @@ public class TabList {
                 this.proxyServer.getEventManager().register(this, this.tabListHeaderFooter);
                 logger.info("Loaded Header & Footer");
             }
-        }
-
-        try{
-            luckperms = LuckPermsProvider.get();
-        }catch(IllegalArgumentException e){
-            logger.info("Unable  to load LuckPerms!");
         }
     }
 }
