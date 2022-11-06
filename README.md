@@ -16,14 +16,23 @@ Tablist Plugin for velocity
 [tablist-header-footer]
     enabled=false
     # If you are unsure how to hanle new lines, take a look at https://toml.io/en/ or just use \n
-    header="""
-        <white><red>Example<red> Network</white>
-
-        <white>Line 3!</white>"""
+    header="<color:#ff0048>Welcome to </color><color:#ff5900>example network!</color>"
     footer="<light_purple>have fun!</light_purple>"
 
+[list-player-current-server]
+    enabled=false
+
+[list-player-luckperm-rank]
+    enabled=false
+
+[luckperm-rank-color]
+    list=["owner","admin","staff"]
+    owner="0xCF00DB"
+    admin="0x473EC8"
+    staff="0x9B0010"
+
 [developer-info]
-    config-version=0.1
+    config-version=0.2
 ```
 All options are disabled by default.
 
