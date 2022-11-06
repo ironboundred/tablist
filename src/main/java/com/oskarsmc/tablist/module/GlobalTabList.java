@@ -10,21 +10,25 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.util.RGBLike;
+import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class GlobalTabList {
     private final ProxyServer proxyServer;
     private final TabList plugin;
-    private final UserManager userManager;
+    private UserManager userManager = null;
+    private boolean useLuckperm = false;
+    private boolean displayServer = false;
+    Map<String, String> rankColors = new HashMap<>();
 
-    public GlobalTabList(TabList plugin, ProxyServer proxyServer) {
+    public GlobalTabList(TabList plugin, ProxyServer proxyServer, boolean useLuckperm,
+                         boolean displayServer, LuckPerms luckPerms, Map<String, String> rankColors) {
         this.plugin = plugin;
         this.proxyServer = proxyServer;
         proxyServer.getScheduler().buildTask(plugin, new Runnable() {
@@ -33,8 +37,12 @@ public class GlobalTabList {
                 update();
             }
         }).repeat(2000, TimeUnit.MILLISECONDS).schedule();
-
-        userManager = plugin.luckperms.getUserManager();
+        this.useLuckperm = useLuckperm;
+        this.displayServer = displayServer;
+        if(useLuckperm) {
+            userManager = luckPerms.getUserManager();
+        }
+        this.rankColors = rankColors;
     }
 
     @Subscribe
@@ -85,118 +93,40 @@ public class GlobalTabList {
         }
     }
 
-    public Component getPlayerEntry(Player player){
+    public Component getPlayerEntry(Player player) {
         String username = player.getUsername();
-        if (player.getCurrentServer().isEmpty()){
+        if (player.getCurrentServer().isEmpty()) {
             return Component.text(username);
         }
-        String server = "[" + player.getCurrentServer().get().getServerInfo().getName() + "]";
-        User user = null;
-        if (userManager.isLoaded(player.getUniqueId())){
-            user = userManager.getUser(player.getUniqueId());
-        }else{
-            try {
-                user = userManager.loadUser(player.getUniqueId()).get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+        Component server = Component.text("");
+        Component rank = Component.text("");
+
+        if(useLuckperm){
+            User user = null;
+            if (userManager.isLoaded(player.getUniqueId())) {
+                user = userManager.getUser(player.getUniqueId());
+            } else {
+                try {
+                    user = userManager.loadUser(player.getUniqueId()).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (user != null && !user.getPrimaryGroup().isEmpty()) {
+                rank = Component.text("[" + user.getPrimaryGroup() + "]");
+                if (rankColors.containsKey(user.getPrimaryGroup())){
+                    rank = rank.color(TextColor.fromHexString(rankColors.get(user.getPrimaryGroup())));
+                }
             }
         }
 
-        if (user != null && !user.getPrimaryGroup().isEmpty()){
-            String rank = "[" + user.getPrimaryGroup() + "]";
-            switch (user.getPrimaryGroup().toLowerCase()){
-                case "endergod":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(71, 62, 200)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "admin":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(143, 0, 155)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "headmod":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(42, 155, 0)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "mod":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(155, 0, 16)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "chatmod":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(155, 75, 0)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "helper":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(255, 103, 208)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "diamondpatreon":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(32, 134, 255)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "emeraldpatreon":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(81, 255, 62)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "goldpatreon":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(200, 136, 15)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "ironpatreon":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(188, 188, 188)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-                case "vip":{
-                    return Component.text(server)
-                            .color(TextColor.color(30, 127, 155))
-                            .append(Component.text(rank)
-                                    .color(TextColor.color(200, 155, 0)))
-                            .append(Component.text(username)
-                                    .color(TextColor.color(188, 188, 188)));
-                }
-            }
+        if (displayServer){
+            server = Component.text("[" + player.getCurrentServer().get().getServerInfo().getName() + "]")
+                    .color(TextColor.color(30, 127, 155));
         }
-        return Component.text(server)
-                .color(TextColor.color(30, 127, 155))
+
+        return server
+                .append(rank)
                 .append(Component.text(username)
                         .color(TextColor.color(188, 188, 188)));
     }

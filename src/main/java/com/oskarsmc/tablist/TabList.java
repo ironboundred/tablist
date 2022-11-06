@@ -15,6 +15,9 @@ import net.luckperms.api.LuckPermsProvider;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Plugin(
         id = "tablist",
@@ -27,7 +30,7 @@ import java.nio.file.Path;
 public class TabList {
 
     @Inject
-    public Logger logger;
+    private Logger logger;
 
     @Inject
     private ProxyServer proxyServer;
@@ -41,21 +44,33 @@ public class TabList {
     private GlobalTabList globalTabList;
     private TabListHeaderFooter tabListHeaderFooter;
 
-    public LuckPerms luckperms;
+    private LuckPerms luckperms;
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         this.tabSettings = new TabSettings(dataDirectory.toFile(), logger);
 
-        try{
-            luckperms = LuckPermsProvider.get();
-        }catch(IllegalArgumentException e){
-            logger.info("Unable  to load LuckPerms!");
+        if (this.tabSettings.getToml().getBoolean("list-player-luckperm-rank.enabled")) {
+            try {
+                luckperms = LuckPermsProvider.get();
+            } catch (IllegalArgumentException e) {
+                logger.info("Unable  to load LuckPerms!");
+            }
         }
 
         if (this.tabSettings.isEnabled()) {
+            Map<String, String> rankColors = new HashMap<>();
+            List<String> rankList = this.tabSettings.getToml().getList("luckperm-rank-color.list");
+            for (String s: rankList){
+                rankColors.put(s, this.tabSettings.getToml().getString("luckperm-rank-color." + s));
+            }
             if (this.tabSettings.getToml().getBoolean("global-tablist.enabled")) {
-                this.globalTabList = new GlobalTabList(this, this.proxyServer);
+                this.globalTabList = new GlobalTabList(this,
+                        this.proxyServer,
+                        this.tabSettings.getToml().getBoolean("list-player-luckperm-rank.enabled"),
+                        this.tabSettings.getToml().getBoolean("list-player-current-server.enabled"),
+                        luckperms,
+                        rankColors);
                 this.proxyServer.getEventManager().register(this, this.globalTabList);
                 logger.info("Loaded Global Tablist");
             }
