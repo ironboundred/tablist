@@ -27,9 +27,9 @@ Tablist Plugin for velocity
 
 [luckperm-rank-color]
     list=["owner","admin","staff"]
-    owner="0xCF00DB"
-    admin="0x473EC8"
-    staff="0x9B0010"
+    owner="#CF00DB"
+    admin="#473EC8"
+    staff="#9B0010"
 
 [developer-info]
     config-version=0.2
