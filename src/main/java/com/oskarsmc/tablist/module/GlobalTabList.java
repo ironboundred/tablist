@@ -1,16 +1,15 @@
 package com.oskarsmc.tablist.module;
 
 import com.oskarsmc.tablist.TabList;
+import com.oskarsmc.tablist.util.TabPlayer;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.util.RGBLike;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
@@ -21,22 +20,15 @@ import java.util.concurrent.TimeUnit;
 
 public class GlobalTabList {
     private final ProxyServer proxyServer;
-    private final TabList plugin;
     private UserManager userManager = null;
-    private boolean useLuckperm = false;
-    private boolean displayServer = false;
-    Map<String, String> rankColors = new HashMap<>();
+    private final boolean useLuckperm;
+    private final boolean displayServer;
+    Map<String, String> rankColors;
 
     public GlobalTabList(TabList plugin, ProxyServer proxyServer, boolean useLuckperm,
                          boolean displayServer, LuckPerms luckPerms, Map<String, String> rankColors) {
-        this.plugin = plugin;
         this.proxyServer = proxyServer;
-        proxyServer.getScheduler().buildTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                update();
-            }
-        }).repeat(2000, TimeUnit.MILLISECONDS).schedule();
+        proxyServer.getScheduler().buildTask(plugin, this::update).repeat(2000, TimeUnit.MILLISECONDS).schedule();
         this.useLuckperm = useLuckperm;
         this.displayServer = displayServer;
         if(useLuckperm) {
@@ -56,23 +48,36 @@ public class GlobalTabList {
     }
 
     public void update() {
+        List<TabPlayer> tabPlayerList = new ArrayList<>();
+        for (Player player: this.proxyServer.getAllPlayers()){
+            tabPlayerList.add(getPlayerEntry(player));
+        }
+        Collections.sort(tabPlayerList);
+        char sortLetter = 'a';
+        for (int count = 0; count < tabPlayerList.size(); count ++){
+            tabPlayerList.get(count).setSortOrder(sortLetter);
+            sortLetter ++;
+        }
+
         for (Player player : this.proxyServer.getAllPlayers()) {
-            for (Player player1 : this.proxyServer.getAllPlayers()) {
-                if (!player.getTabList().containsEntry(player1.getUniqueId())) {
+            for (TabPlayer tabPlayer : tabPlayerList) {
+                if (!player.getTabList().containsEntry(tabPlayer.getUserID())) {
                     player.getTabList().addEntry(
                             TabListEntry.builder()
-                                    .displayName(getPlayerEntry(player1))
-                                    .profile(player1.getGameProfile())
+                                    .displayName(tabPlayer.formatTabPlayer())
+                                    .profile(this.proxyServer.getPlayer(tabPlayer.getUserID()).get().getGameProfile()
+                                            .withName(String.valueOf(tabPlayer.getSortOrder())))
                                     .gameMode(0) // Impossible to get player game mode from proxy, always assume survival
                                     .tabList(player.getTabList())
                                     .build()
                     );
                 }else{
-                    player.getTabList().removeEntry(player1.getUniqueId());
+                    player.getTabList().removeEntry(tabPlayer.getUserID());
                     player.getTabList().addEntry(
                             TabListEntry.builder()
-                                    .displayName(getPlayerEntry(player1))
-                                    .profile(player1.getGameProfile())
+                                    .displayName(tabPlayer.formatTabPlayer())
+                                    .profile(this.proxyServer.getPlayer(tabPlayer.getUserID()).get().getGameProfile()
+                                            .withName(String.valueOf(tabPlayer.getSortOrder())))
                                     .gameMode(0) // Impossible to get player game mode from proxy, always assume survival
                                     .tabList(player.getTabList())
                                     .build()
@@ -93,11 +98,9 @@ public class GlobalTabList {
         }
     }
 
-    public Component getPlayerEntry(Player player) {
-        String username = player.getUsername();
-        if (player.getCurrentServer().isEmpty()) {
-            return Component.text(username);
-        }
+    public TabPlayer getPlayerEntry(Player player) {
+        TabPlayer tabPlayer = new TabPlayer(player.getUsername(), player.getUniqueId());
+
         Component server = Component.text("");
         Component rank = Component.text("");
 
@@ -113,6 +116,7 @@ public class GlobalTabList {
                 }
             }
             if (user != null && !user.getPrimaryGroup().isEmpty()) {
+                tabPlayer.setSortRank(user.getPrimaryGroup());
                 rank = Component.text("[" + user.getPrimaryGroup() + "]");
                 if (rankColors.containsKey(user.getPrimaryGroup())){
                     rank = rank.color(TextColor.fromHexString(rankColors.get(user.getPrimaryGroup())));
@@ -120,14 +124,20 @@ public class GlobalTabList {
             }
         }
 
+        tabPlayer.setUserRank(rank);
+
+        if (player.getCurrentServer().isEmpty()) {
+            return tabPlayer;
+        }
+
         if (displayServer){
+            tabPlayer.setSortServer(player.getCurrentServer().get().getServerInfo().getName());
             server = Component.text("[" + player.getCurrentServer().get().getServerInfo().getName() + "]")
                     .color(TextColor.color(30, 127, 155));
         }
 
-        return server
-                .append(rank)
-                .append(Component.text(username)
-                        .color(TextColor.color(188, 188, 188)));
+        tabPlayer.setCurrentServer(server);
+
+        return tabPlayer;
     }
 }

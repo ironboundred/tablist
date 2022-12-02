@@ -10,9 +10,9 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.util.concurrent.TimeUnit;
 
 public class TabListHeaderFooter {
-    private Component header;
-    private Component footer;
-    private ProxyServer proxyServer;
+    private final Component header;
+    private final Component footer;
+    private final ProxyServer proxyServer;
 
     public TabListHeaderFooter(TabList plugin, ProxyServer proxyServer, TabSettings tabSettings) {
         var mm = MiniMessage.miniMessage();
