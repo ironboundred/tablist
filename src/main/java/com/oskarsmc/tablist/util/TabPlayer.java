@@ -1,5 +1,6 @@
 package com.oskarsmc.tablist.util;
 
+import com.oskarsmc.tablist.TabList;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
@@ -25,13 +26,14 @@ public class TabPlayer implements Comparable<TabPlayer> {
         if (userRank == null || player.getUserRank() == null){
             return 0;
         }
-        if (sortServer.toLowerCase().compareTo(player.getSortServer().toLowerCase()) == 0){
-            if (sortRank.toLowerCase().compareTo(player.getSortRank().toLowerCase()) == 0){
-                return username.toLowerCase().compareTo(player.getUsername().toLowerCase());
-            }
-            return sortRank.toLowerCase().compareTo(player.getSortRank().toLowerCase());
+        if (TabList.getInstance().getRankWeight(sortRank) == TabList.getInstance().getRankWeight(player.sortRank)){
+            return username.toLowerCase().compareTo(player.getUsername().toLowerCase());
         }
-        return sortServer.toLowerCase().compareTo(player.getSortServer().toLowerCase());
+        if (TabList.getInstance().getRankWeight(sortRank) > TabList.getInstance().getRankWeight(player.sortRank)){
+            return -1;
+        }else {
+            return 1;
+        }
     }
 
     public Component formatTabPlayer(){

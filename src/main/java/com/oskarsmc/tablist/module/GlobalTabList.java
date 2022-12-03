@@ -25,14 +25,13 @@ public class GlobalTabList {
     private final boolean displayServer;
     Map<String, String> rankColors;
 
-    public GlobalTabList(TabList plugin, ProxyServer proxyServer, boolean useLuckperm,
-                         boolean displayServer, LuckPerms luckPerms, Map<String, String> rankColors) {
-        this.proxyServer = proxyServer;
-        proxyServer.getScheduler().buildTask(plugin, this::update).repeat(2000, TimeUnit.MILLISECONDS).schedule();
+    public GlobalTabList(boolean useLuckperm, boolean displayServer, Map<String, String> rankColors) {
+        this.proxyServer = TabList.getInstance().proxyServer;
+        proxyServer.getScheduler().buildTask(TabList.getInstance(), this::update).repeat(2000, TimeUnit.MILLISECONDS).schedule();
         this.useLuckperm = useLuckperm;
         this.displayServer = displayServer;
         if(useLuckperm) {
-            userManager = luckPerms.getUserManager();
+            userManager = TabList.getInstance().luckperms.getUserManager();
         }
         this.rankColors = rankColors;
     }
@@ -52,11 +51,13 @@ public class GlobalTabList {
         for (Player player: this.proxyServer.getAllPlayers()){
             tabPlayerList.add(getPlayerEntry(player));
         }
+
         Collections.sort(tabPlayerList);
+
         char sortLetter = 'a';
-        for (int count = 0; count < tabPlayerList.size(); count ++){
-            tabPlayerList.get(count).setSortOrder(sortLetter);
-            sortLetter ++;
+        for (TabPlayer value : tabPlayerList) {
+            value.setSortOrder(sortLetter);
+            sortLetter++;
         }
 
         for (Player player : this.proxyServer.getAllPlayers()) {

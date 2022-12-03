@@ -28,12 +28,12 @@ import java.util.Map;
         dependencies = {@Dependency(id = "luckperms")}
 )
 public class TabList {
-
+    private static TabList tabList;
     @Inject
     private Logger logger;
 
     @Inject
-    private ProxyServer proxyServer;
+    public ProxyServer proxyServer;
 
     @Inject
     private @DataDirectory
@@ -44,10 +44,12 @@ public class TabList {
     private GlobalTabList globalTabList;
     private TabListHeaderFooter tabListHeaderFooter;
 
-    private LuckPerms luckperms;
+    public LuckPerms luckperms;
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
+        tabList = this;
+
         this.tabSettings = new TabSettings(dataDirectory.toFile(), logger);
 
         if (this.tabSettings.getToml().getBoolean("list-player-luckperm-rank.enabled")) {
@@ -65,11 +67,9 @@ public class TabList {
                 rankColors.put(s, this.tabSettings.getToml().getString("luckperm-rank-color." + s));
             }
             if (this.tabSettings.getToml().getBoolean("global-tablist.enabled")) {
-                this.globalTabList = new GlobalTabList(this,
-                        this.proxyServer,
+                this.globalTabList = new GlobalTabList(
                         this.tabSettings.getToml().getBoolean("list-player-luckperm-rank.enabled"),
                         this.tabSettings.getToml().getBoolean("list-player-current-server.enabled"),
-                        luckperms,
                         rankColors);
                 this.proxyServer.getEventManager().register(this, this.globalTabList);
                 logger.info("Loaded Global Tablist");
@@ -81,5 +81,24 @@ public class TabList {
                 logger.info("Loaded Header & Footer");
             }
         }
+    }
+
+    public static TabList getInstance(){
+        return tabList;
+    }
+    public int getRankWeight(String rank){
+        int weight = 0;
+
+        if (this.tabSettings.getToml().getBoolean("list-player-luckperm-rank.enabled")){
+            if (this.luckperms.getGroupManager().getGroup(rank) == null){
+                return weight;
+            }
+
+            if (this.luckperms.getGroupManager().getGroup(rank).getWeight().isPresent()) {
+                weight = this.luckperms.getGroupManager().getGroup(rank).getWeight().getAsInt();
+            }
+        }
+
+        return weight;
     }
 }
