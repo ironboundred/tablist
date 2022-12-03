@@ -54,7 +54,7 @@ public class GlobalTabList {
 
         Collections.sort(tabPlayerList);
 
-        char sortLetter = 'a';
+        char sortLetter = 'A';
         for (TabPlayer value : tabPlayerList) {
             value.setSortOrder(sortLetter);
             sortLetter++;
@@ -78,7 +78,7 @@ public class GlobalTabList {
                             TabListEntry.builder()
                                     .displayName(tabPlayer.formatTabPlayer())
                                     .profile(this.proxyServer.getPlayer(tabPlayer.getUserID()).get().getGameProfile()
-                                            .withName(String.valueOf(tabPlayer.getSortOrder())))
+                                            .withName(String.valueOf(tabPlayer.getSortOrder()) + "-" + tabPlayer.getUsername()))
                                     .gameMode(0) // Impossible to get player game mode from proxy, always assume survival
                                     .tabList(player.getTabList())
                                     .build()
@@ -121,6 +121,8 @@ public class GlobalTabList {
                 rank = Component.text("[" + user.getPrimaryGroup() + "]");
                 if (rankColors.containsKey(user.getPrimaryGroup())){
                     rank = rank.color(TextColor.fromHexString(rankColors.get(user.getPrimaryGroup())));
+                }else {
+                    rank = rank.color(TextColor.color(188, 188, 188));
                 }
             }
         }
