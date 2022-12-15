@@ -55,7 +55,7 @@ public class GlobalTabList {
 
         Collections.sort(tabPlayerList);
 
-        char sortLetter = ' ';
+        char sortLetter = 'A';
         for (TabPlayer value : tabPlayerList) {
             value.setSortOrder(sortLetter);
             sortLetter++;
@@ -138,7 +138,7 @@ public class GlobalTabList {
 
     private String shorten(String string){
         return Optional.ofNullable(string)
-                .filter(str -> str.length() > 15)
+                .filter(str -> str.length() >= 15)
                 .map(str -> str.substring(0, str.length() - 2))
                 .orElse(string);
     }
