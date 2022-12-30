@@ -44,7 +44,10 @@ public class TabPlayer implements Comparable<TabPlayer> {
     }
 
     public String getUsername() {
-        return username;
+        if (username != null){
+            return username;
+        }
+        return "error";
     }
 
     public UUID getUserID() {
@@ -52,11 +55,17 @@ public class TabPlayer implements Comparable<TabPlayer> {
     }
 
     public Component getCurrentServer() {
-        return currentServer;
+        if (currentServer != null){
+            return currentServer;
+        }
+        return Component.text(" ");
     }
 
     public Component getUserRank() {
-        return userRank;
+        if (userRank != null){
+            return userRank;
+        }
+        return Component.text(" ");
     }
 
     public char getSortOrder() {

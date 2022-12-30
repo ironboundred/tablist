@@ -94,8 +94,8 @@ public class GlobalTabList {
     public TabPlayer getPlayerEntry(Player player) {
         TabPlayer tabPlayer = new TabPlayer(player.getUsername(), player.getUniqueId());
 
-        Component server = Component.text("");
-        Component rank = Component.text("");
+        Component server = Component.text(" ");
+        Component rank = Component.text(" ");
 
         if(useLuckperm){
             User user = null;
@@ -126,8 +126,9 @@ public class GlobalTabList {
         }
 
         if (displayServer){
-            tabPlayer.setSortServer(player.getCurrentServer().get().getServerInfo().getName());
-            server = Component.text("[" + player.getCurrentServer().get().getServerInfo().getName() + "]")
+            String servername = player.getCurrentServer().get().getServerInfo().getName();
+            tabPlayer.setSortServer(servername);
+            server = Component.text("[" + servername + "]")
                     .color(TextColor.color(30, 127, 155));
         }
 
