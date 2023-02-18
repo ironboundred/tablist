@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.luckperms.api.LuckPerms;
@@ -64,18 +65,26 @@ public class GlobalTabList {
         for (Player player : this.proxyServer.getAllPlayers()) {
             for (TabPlayer tabPlayer : tabPlayerList) {
                 if (player.getTabList().containsEntry(tabPlayer.getUserID())) {
-                    player.getTabList().removeEntry(tabPlayer.getUserID());
+                    //player.getTabList().removeEntry(tabPlayer.getUserID());
+                    TabListEntry tabListEntry = null;
+                    for (TabListEntry entry: player.getTabList().getEntries()){
+                        if (entry.getProfile().getId().equals(tabPlayer.getUserID())){
+                            tabListEntry = entry;
+                        }
+                    }
+                    if (tabListEntry != null){
+                        tabListEntry.setDisplayName(tabPlayer.formatTabPlayer());
+                    }
+                }else {
+                    player.getTabList().addEntry(
+                            TabListEntry.builder()
+                                    .displayName(tabPlayer.formatTabPlayer())
+                                    .profile(this.proxyServer.getPlayer(tabPlayer.getUserID()).get().getGameProfile()
+                                            .withName(String.valueOf(tabPlayer.getSortOrder()) + " " + shorten(tabPlayer.getUsername())))
+                                    .tabList(player.getTabList())
+                                    .build()
+                    );
                 }
-
-                player.getTabList().addEntry(
-                        TabListEntry.builder()
-                                .displayName(tabPlayer.formatTabPlayer())
-                                .profile(this.proxyServer.getPlayer(tabPlayer.getUserID()).get().getGameProfile()
-                                        .withName(String.valueOf(tabPlayer.getSortOrder()) + " " + shorten(tabPlayer.getUsername())))
-                                .gameMode(0) // Impossible to get player game mode from proxy, always assume survival
-                                .tabList(player.getTabList())
-                                .build()
-                );
             }
 
             for (TabListEntry entry : player.getTabList().getEntries()) {
